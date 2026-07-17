@@ -1,7 +1,17 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import AppFooter from './components/AppFooter.vue'
+import AppHeader from './components/AppHeader.vue'
 </script>
 
 <template>
-  <HelloWorld />
+  <div class="site-shell">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <AppHeader />
+
+    <main id="main-content" class="site-main" tabindex="-1">
+      <RouterView />
+    </main>
+
+    <AppFooter />
+  </div>
 </template>
