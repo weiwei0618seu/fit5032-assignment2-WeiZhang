@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
+import SessionsView from '../views/SessionsView.vue'
+import CommunityView from '../views/CommunityView.vue'
 
 const routes = [
   {
@@ -39,27 +41,13 @@ const routes = [
   {
     path: '/sessions',
     name: 'sessions',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'Wellbeing support sessions',
-      title: 'Choose support that fits around your caring role.',
-      description:
-        'Young carers will be able to browse online and in-person wellbeing sessions and make a private booking.',
-      stage: 'Session data and booking actions will be introduced after authentication.',
-    },
+    component: SessionsView,
     meta: { title: 'Wellbeing sessions' },
   },
   {
     path: '/community',
     name: 'community',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'Peer community',
-      title: 'Meet people who understand the caring journey.',
-      description:
-        'Explore regular peer support circles designed to be respectful, low-pressure, and welcoming.',
-      stage: 'Circle listings, joining, and ratings will be implemented in later A2 stages.',
-    },
+    component: CommunityView,
     meta: { title: 'Peer community' },
   },
   {
