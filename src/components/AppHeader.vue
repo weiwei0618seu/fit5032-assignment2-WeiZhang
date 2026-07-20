@@ -1,8 +1,11 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '../stores/authStore'
 
 const route = useRoute()
+const router = useRouter()
+const { currentUser, isAuthenticated, logout } = useAuth()
 const isMenuOpen = ref(false)
 
 const primaryLinks = [
@@ -19,6 +22,15 @@ const closeMenu = () => {
 
 const handleEscape = (event) => {
   if (event.key === 'Escape') closeMenu()
+}
+
+const handleLogout = async () => {
+  logout()
+  closeMenu()
+
+  if (route.path === '/account' || route.path.startsWith('/admin')) {
+    await router.push('/')
+  }
 }
 
 watch(() => route.fullPath, closeMenu)
@@ -60,8 +72,18 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEscape))
         </ul>
 
         <div class="nav-actions">
-          <RouterLink class="text-link" to="/login">Log in</RouterLink>
-          <RouterLink class="button button-small" to="/register">Create account</RouterLink>
+          <template v-if="isAuthenticated">
+            <RouterLink class="text-link account-link" to="/account">
+              {{ currentUser.displayName }}
+            </RouterLink>
+            <button class="button button-small button-secondary" type="button" @click="handleLogout">
+              Log out
+            </button>
+          </template>
+          <template v-else>
+            <RouterLink class="text-link" to="/login">Log in</RouterLink>
+            <RouterLink class="button button-small" to="/register">Create account</RouterLink>
+          </template>
         </div>
       </nav>
     </div>

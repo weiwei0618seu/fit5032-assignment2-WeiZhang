@@ -62,6 +62,19 @@ export const restoreDefaultData = () => {
   state.dataSource = 'defaults'
 }
 
+export const addUser = (user) => {
+  const duplicateUser = state.users.some(
+    (existingUser) =>
+      existingUser.id === user.id || existingUser.email.toLowerCase() === user.email.toLowerCase(),
+  )
+
+  if (duplicateUser) return false
+
+  state.users.push(user)
+  state.storageAvailable = writeCareBloomData(createSnapshot())
+  return true
+}
+
 const collectionCounts = computed(() =>
   Object.fromEntries(collectionKeys.map((key) => [key, state[key].length])),
 )

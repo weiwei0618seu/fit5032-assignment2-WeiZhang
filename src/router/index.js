@@ -4,6 +4,9 @@ import PlaceholderView from '../views/PlaceholderView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import SessionsView from '../views/SessionsView.vue'
 import CommunityView from '../views/CommunityView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import LoginView from '../views/LoginView.vue'
+import AccountView from '../views/AccountView.vue'
 
 const routes = [
   {
@@ -53,40 +56,19 @@ const routes = [
   {
     path: '/register',
     name: 'register',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'Create an account',
-      title: 'Start with a private CareBloom account.',
-      description:
-        'Registration will let young carers manage bookings, join circles, and keep their support information together.',
-      stage: 'The validated registration form will be implemented in the authentication stage.',
-    },
+    component: RegisterView,
     meta: { title: 'Register' },
   },
   {
     path: '/login',
     name: 'login',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'Welcome back',
-      title: 'Log in to continue your support journey.',
-      description:
-        'The login page will provide access to bookings, joined circles, and account details.',
-      stage: 'Login, logout, and account persistence will be implemented in the authentication stage.',
-    },
+    component: LoginView,
     meta: { title: 'Log in' },
   },
   {
     path: '/account',
     name: 'account',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'My account',
-      title: 'Your support activity in one calm place.',
-      description:
-        'Authenticated users will be able to review their bookings, joined circles, and account details here.',
-      stage: 'This route will be protected when authentication is added.',
-    },
+    component: AccountView,
     meta: { title: 'My account', futureAuth: true },
   },
   {
