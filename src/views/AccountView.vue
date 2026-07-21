@@ -1,12 +1,21 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../stores/authStore'
-import { useCareBloomData } from '../stores/careBloomStore'
+import { cancelBooking, useCareBloomData } from '../stores/careBloomStore'
 
 const router = useRouter()
 const { currentUser, isAuthenticated, logout } = useAuth()
 const { state: dataState } = useCareBloomData()
+const accountFeedback = ref('')
+
+const dateFormatter = new Intl.DateTimeFormat('en-AU', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+})
+
+const formatDate = (date) => dateFormatter.format(new Date(`${date}T00:00:00`))
 
 const memberSince = computed(() => {
   if (!currentUser.value?.createdAt) return 'Not available'
@@ -18,14 +27,36 @@ const memberSince = computed(() => {
   }).format(new Date(currentUser.value.createdAt))
 })
 
-const bookingCount = computed(() =>
+const myBookings = computed(() =>
   currentUser.value
-    ? dataState.bookings.filter(
-        (booking) =>
-          booking.userId === currentUser.value.id && booking.status === 'confirmed',
-      ).length
-    : 0,
+    ? dataState.bookings
+        .filter(
+          (booking) =>
+            booking.userId === currentUser.value.id && booking.status === 'confirmed',
+        )
+        .map((booking) => ({
+          ...booking,
+          session: dataState.supportSessions.find((session) => session.id === booking.sessionId),
+        }))
+        .filter((booking) => booking.session)
+        .sort((first, second) =>
+          `${first.session.date}T${first.session.time}`.localeCompare(
+            `${second.session.date}T${second.session.time}`,
+          ),
+        )
+    : [],
 )
+
+const joinedCircles = computed(() => {
+  const circleIds = currentUser.value?.joinedCircleIds ?? []
+  return circleIds
+    .map((circleId) => dataState.peerCircles.find((circle) => circle.id === circleId))
+    .filter(Boolean)
+    .sort((first, second) => first.nextMeeting.localeCompare(second.nextMeeting))
+})
+
+const bookingCount = computed(() => myBookings.value.length)
+const circleCount = computed(() => joinedCircles.value.length)
 
 const ratingCount = computed(() =>
   currentUser.value
@@ -40,6 +71,11 @@ const roleLabel = computed(() =>
 const handleLogout = async () => {
   logout()
   await router.push('/')
+}
+
+const handleCancellation = (bookingId) => {
+  const result = cancelBooking(currentUser.value.id, bookingId)
+  accountFeedback.value = result.message
 }
 </script>
 
@@ -103,11 +139,82 @@ const handleLogout = async () => {
               <strong>{{ ratingCount }}</strong>
               <span>ratings shared</span>
             </div>
+            <div>
+              <strong>{{ circleCount }}</strong>
+              <span>peer circles joined</span>
+            </div>
           </div>
           <p class="activity-note">
-            Booking and peer-circle management will be connected in the next development stages.
+            Your activity is saved in this browser for the CareBloom course prototype.
           </p>
         </aside>
+      </div>
+
+      <p v-if="accountFeedback" class="account-feedback" role="status">
+        {{ accountFeedback }}
+      </p>
+
+      <div class="account-management-grid">
+        <section class="management-card" aria-labelledby="bookings-heading">
+          <div class="management-heading">
+            <div>
+              <p class="eyebrow">My Bookings</p>
+              <h2 id="bookings-heading">Upcoming sessions</h2>
+            </div>
+            <span>{{ myBookings.length }}</span>
+          </div>
+
+          <div v-if="myBookings.length" class="management-list">
+            <article v-for="booking in myBookings" :key="booking.id" class="management-item">
+              <div>
+                <span class="management-kicker">
+                  {{ formatDate(booking.session.date) }} at {{ booking.session.time }}
+                </span>
+                <h3>{{ booking.session.title }}</h3>
+                <p>{{ booking.session.format }} &middot; {{ booking.session.location }}</p>
+              </div>
+              <button
+                class="danger-link"
+                type="button"
+                :aria-label="`Cancel booking for ${booking.session.title}`"
+                @click="handleCancellation(booking.id)"
+              >
+                Cancel booking
+              </button>
+            </article>
+          </div>
+
+          <div v-else class="management-empty">
+            <p>You do not have any confirmed session bookings.</p>
+            <RouterLink class="card-link" to="/sessions">Browse sessions &rarr;</RouterLink>
+          </div>
+        </section>
+
+        <section class="management-card" aria-labelledby="joined-circles-heading">
+          <div class="management-heading">
+            <div>
+              <p class="eyebrow">My community</p>
+              <h2 id="joined-circles-heading">Joined peer circles</h2>
+            </div>
+            <span>{{ joinedCircles.length }}</span>
+          </div>
+
+          <div v-if="joinedCircles.length" class="management-list">
+            <article v-for="circle in joinedCircles" :key="circle.id" class="management-item circle-item">
+              <div>
+                <span class="management-kicker">Next: {{ formatDate(circle.nextMeeting) }}</span>
+                <h3>{{ circle.name }}</h3>
+                <p>{{ circle.schedule }} &middot; {{ circle.location }}</p>
+              </div>
+              <RouterLink class="card-link" to="/community">View circles</RouterLink>
+            </article>
+          </div>
+
+          <div v-else class="management-empty">
+            <p>You have not joined a peer support circle yet.</p>
+            <RouterLink class="card-link" to="/community">Explore peer circles &rarr;</RouterLink>
+          </div>
+        </section>
       </div>
     </div>
 

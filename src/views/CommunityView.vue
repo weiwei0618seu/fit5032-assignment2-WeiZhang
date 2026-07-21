@@ -1,9 +1,12 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useCareBloomData } from '../stores/careBloomStore'
+import { computed, reactive, ref } from 'vue'
+import { joinPeerCircle, useCareBloomData } from '../stores/careBloomStore'
+import { useAuth } from '../stores/authStore'
 
 const { state } = useCareBloomData()
+const { currentUser, isAuthenticated } = useAuth()
 const selectedFormat = ref('All')
+const joinFeedback = reactive({})
 
 const dateFormatter = new Intl.DateTimeFormat('en-AU', {
   weekday: 'short',
@@ -27,6 +30,17 @@ const filteredCircles = computed(() =>
 const formatDate = (date) => dateFormatter.format(new Date(`${date}T00:00:00`))
 
 const placesRemaining = (circle) => Math.max(circle.capacity - circle.memberCount, 0)
+
+const isJoined = (circleId) =>
+  Boolean(currentUser.value?.joinedCircleIds?.includes(circleId))
+
+const handleJoin = (circle) => {
+  const result = joinPeerCircle(currentUser.value.id, circle.id)
+  joinFeedback[circle.id] = {
+    type: result.ok ? 'success' : 'error',
+    message: result.message,
+  }
+}
 </script>
 
 <template>
@@ -38,7 +52,7 @@ const placesRemaining = (circle) => Math.max(circle.capacity - circle.memberCoun
       </div>
       <p class="page-lead">
         Browse fictional peer circles designed to feel respectful, guided, and low-pressure.
-        Joining and member ratings will be added in later stages.
+        Young carer accounts can join an available circle and see it in My Account.
       </p>
     </div>
   </section>
@@ -104,10 +118,38 @@ const placesRemaining = (circle) => Math.max(circle.capacity - circle.memberCoun
               <strong>{{ placesRemaining(circle) }}</strong>
               {{ placesRemaining(circle) === 1 ? 'place' : 'places' }} remaining
             </p>
-            <RouterLink class="card-link" to="/login">
+            <RouterLink
+              v-if="!isAuthenticated"
+              class="card-link"
+              :to="{ name: 'login', query: { redirect: '/community' } }"
+            >
               Log in to join <span aria-hidden="true">&rarr;</span>
             </RouterLink>
+            <span v-else-if="currentUser.role !== 'user'" class="card-action-state">
+              Young carer accounts only
+            </span>
+            <RouterLink v-else-if="isJoined(circle.id)" class="card-link booked-link" to="/account">
+              Joined &middot; View account
+            </RouterLink>
+            <button
+              v-else
+              class="card-link card-action-button"
+              type="button"
+              :disabled="placesRemaining(circle) === 0"
+              @click="handleJoin(circle)"
+            >
+              {{ placesRemaining(circle) === 0 ? 'Circle full' : 'Join this circle' }}
+              <span v-if="placesRemaining(circle) > 0" aria-hidden="true">&rarr;</span>
+            </button>
           </div>
+          <p
+            v-if="joinFeedback[circle.id]"
+            class="card-feedback"
+            :class="`is-${joinFeedback[circle.id].type}`"
+            role="status"
+          >
+            {{ joinFeedback[circle.id].message }}
+          </p>
         </article>
       </div>
 

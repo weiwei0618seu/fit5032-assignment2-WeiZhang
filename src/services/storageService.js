@@ -1,9 +1,9 @@
 import { collectionKeys, createDefaultData } from '../data/defaultData.js'
 
-export const STORAGE_KEY = 'carebloom:data:v2'
+export const STORAGE_KEY = 'carebloom:data:v3'
 export const AUTH_SESSION_KEY = 'carebloom:auth:v1'
-export const SCHEMA_VERSION = 2
-const LEGACY_STORAGE_KEY = 'carebloom:data:v1'
+export const SCHEMA_VERSION = 3
+const LEGACY_STORAGE_KEYS = ['carebloom:data:v2', 'carebloom:data:v1']
 
 const getStorage = () => {
   try {
@@ -31,15 +31,15 @@ const migrateLegacyData = (data) => {
   return {
     ...data,
     users: data.users.map((user) => {
-      if (user.passwordHash && user.passwordSalt) return user
-
       const defaultUser = defaultUsersByEmail.get(user.email)
-      if (!defaultUser) return user
 
       return {
         ...user,
-        passwordSalt: defaultUser.passwordSalt,
-        passwordHash: defaultUser.passwordHash,
+        joinedCircleIds: Array.isArray(user.joinedCircleIds)
+          ? user.joinedCircleIds
+          : (defaultUser?.joinedCircleIds ?? []),
+        passwordSalt: user.passwordSalt ?? defaultUser?.passwordSalt,
+        passwordHash: user.passwordHash ?? defaultUser?.passwordHash,
       }
     }),
   }
@@ -78,18 +78,20 @@ export const readCareBloomData = () => {
       }
     }
 
-    const legacyValue = storage.getItem(LEGACY_STORAGE_KEY)
+    for (const legacyStorageKey of LEGACY_STORAGE_KEYS) {
+      const legacyValue = storage.getItem(legacyStorageKey)
 
-    if (legacyValue) {
-      const legacyPayload = JSON.parse(legacyValue)
+      if (legacyValue) {
+        const legacyPayload = JSON.parse(legacyValue)
 
-      if (hasValidCollections(legacyPayload.data)) {
-        const migratedData = migrateLegacyData(legacyPayload.data)
-        const saved = writeCareBloomData(migratedData)
-        return {
-          data: migratedData,
-          storageAvailable: saved,
-          source: saved ? 'migrated' : 'memory',
+        if (hasValidCollections(legacyPayload.data)) {
+          const migratedData = migrateLegacyData(legacyPayload.data)
+          const saved = writeCareBloomData(migratedData)
+          return {
+            data: migratedData,
+            storageAvailable: saved,
+            source: saved ? 'migrated' : 'memory',
+          }
         }
       }
     }

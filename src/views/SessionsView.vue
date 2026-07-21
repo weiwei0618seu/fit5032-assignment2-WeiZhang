@@ -1,9 +1,12 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useCareBloomData } from '../stores/careBloomStore'
+import { computed, reactive, ref } from 'vue'
+import { createBooking, useCareBloomData } from '../stores/careBloomStore'
+import { useAuth } from '../stores/authStore'
 
 const { state } = useCareBloomData()
+const { currentUser, isAuthenticated } = useAuth()
 const selectedFormat = ref('All')
+const bookingFeedback = reactive({})
 
 const dateFormatter = new Intl.DateTimeFormat('en-AU', {
   weekday: 'short',
@@ -35,6 +38,25 @@ const placesRemaining = (session) => {
 
   return Math.max(session.capacity - confirmedBookings, 0)
 }
+
+const isBooked = (sessionId) =>
+  Boolean(
+    currentUser.value &&
+      state.bookings.some(
+        (booking) =>
+          booking.userId === currentUser.value.id &&
+          booking.sessionId === sessionId &&
+          booking.status === 'confirmed',
+      ),
+  )
+
+const handleBooking = (session) => {
+  const result = createBooking(currentUser.value.id, session.id)
+  bookingFeedback[session.id] = {
+    type: result.ok ? 'success' : 'error',
+    message: result.message,
+  }
+}
 </script>
 
 <template>
@@ -45,8 +67,8 @@ const placesRemaining = (session) => {
         <h1>Choose support that fits around your caring role.</h1>
       </div>
       <p class="page-lead">
-        Explore fictional online, phone, and in-person sessions. Booking will become available
-        after the authentication stage.
+        Explore fictional online, phone, and in-person sessions. Young carer accounts can book an
+        available place and manage it from My Account.
       </p>
     </div>
   </section>
@@ -112,10 +134,38 @@ const placesRemaining = (session) => {
               <strong>{{ placesRemaining(session) }}</strong>
               {{ placesRemaining(session) === 1 ? 'place' : 'places' }} remaining
             </p>
-            <RouterLink class="card-link" to="/login">
+            <RouterLink
+              v-if="!isAuthenticated"
+              class="card-link"
+              :to="{ name: 'login', query: { redirect: '/sessions' } }"
+            >
               Log in to book <span aria-hidden="true">&rarr;</span>
             </RouterLink>
+            <span v-else-if="currentUser.role !== 'user'" class="card-action-state">
+              Young carer accounts only
+            </span>
+            <RouterLink v-else-if="isBooked(session.id)" class="card-link booked-link" to="/account">
+              Booked &middot; View account
+            </RouterLink>
+            <button
+              v-else
+              class="card-link card-action-button"
+              type="button"
+              :disabled="placesRemaining(session) === 0"
+              @click="handleBooking(session)"
+            >
+              {{ placesRemaining(session) === 0 ? 'Session full' : 'Book this session' }}
+              <span v-if="placesRemaining(session) > 0" aria-hidden="true">&rarr;</span>
+            </button>
           </div>
+          <p
+            v-if="bookingFeedback[session.id]"
+            class="card-feedback"
+            :class="`is-${bookingFeedback[session.id].type}`"
+            role="status"
+          >
+            {{ bookingFeedback[session.id].message }}
+          </p>
         </article>
       </div>
 

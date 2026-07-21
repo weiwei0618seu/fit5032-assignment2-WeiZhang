@@ -28,6 +28,10 @@ const replaceCollections = (data) => {
 const createSnapshot = () =>
   Object.fromEntries(collectionKeys.map((key) => [key, state[key]]))
 
+const persistSnapshot = () => {
+  state.storageAvailable = writeCareBloomData(createSnapshot())
+}
+
 const startPersistence = () => {
   if (persistenceStarted) return
 
@@ -71,8 +75,97 @@ export const addUser = (user) => {
   if (duplicateUser) return false
 
   state.users.push(user)
-  state.storageAvailable = writeCareBloomData(createSnapshot())
+  persistSnapshot()
   return true
+}
+
+export const createBooking = (userId, sessionId) => {
+  const user = state.users.find((candidate) => candidate.id === userId)
+  const session = state.supportSessions.find((candidate) => candidate.id === sessionId)
+
+  if (!user || user.role !== 'user') {
+    return { ok: false, message: 'Only young carer accounts can book support sessions.' }
+  }
+
+  if (!session) {
+    return { ok: false, message: 'This support session is no longer available.' }
+  }
+
+  const duplicateBooking = state.bookings.some(
+    (booking) =>
+      booking.userId === userId &&
+      booking.sessionId === sessionId &&
+      booking.status === 'confirmed',
+  )
+
+  if (duplicateBooking) {
+    return { ok: false, message: 'You already have a confirmed booking for this session.' }
+  }
+
+  const confirmedBookings = state.bookings.filter(
+    (booking) => booking.sessionId === sessionId && booking.status === 'confirmed',
+  ).length
+
+  if (confirmedBookings >= session.capacity) {
+    return { ok: false, message: 'This session is currently full.' }
+  }
+
+  const booking = {
+    id: `booking-${globalThis.crypto.randomUUID()}`,
+    userId,
+    sessionId,
+    status: 'confirmed',
+    bookedAt: new Date().toISOString(),
+  }
+
+  state.bookings.push(booking)
+  persistSnapshot()
+  return { ok: true, booking, message: 'Your session booking is confirmed.' }
+}
+
+export const cancelBooking = (userId, bookingId) => {
+  const booking = state.bookings.find((candidate) => candidate.id === bookingId)
+
+  if (!booking || booking.userId !== userId) {
+    return { ok: false, message: 'This booking does not belong to your account.' }
+  }
+
+  if (booking.status !== 'confirmed') {
+    return { ok: false, message: 'This booking has already been cancelled.' }
+  }
+
+  booking.status = 'cancelled'
+  booking.cancelledAt = new Date().toISOString()
+  persistSnapshot()
+  return { ok: true, message: 'Your booking has been cancelled.' }
+}
+
+export const joinPeerCircle = (userId, circleId) => {
+  const user = state.users.find((candidate) => candidate.id === userId)
+  const circle = state.peerCircles.find((candidate) => candidate.id === circleId)
+
+  if (!user || user.role !== 'user') {
+    return { ok: false, message: 'Only young carer accounts can join peer circles.' }
+  }
+
+  if (!circle) {
+    return { ok: false, message: 'This peer circle is no longer available.' }
+  }
+
+  const joinedCircleIds = Array.isArray(user.joinedCircleIds) ? user.joinedCircleIds : []
+
+  if (joinedCircleIds.includes(circleId)) {
+    return { ok: false, message: 'You have already joined this peer circle.' }
+  }
+
+  if (circle.memberCount >= circle.capacity) {
+    return { ok: false, message: 'This peer circle is currently full.' }
+  }
+
+  user.joinedCircleIds = [...joinedCircleIds, circleId]
+  circle.memberCount += 1
+  persistSnapshot()
+  return { ok: true, message: 'You have joined this peer circle.' }
 }
 
 const collectionCounts = computed(() =>

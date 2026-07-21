@@ -72,6 +72,7 @@ export const register = async ({ displayName, email, suburb, password }) => {
     email: normalisedEmail,
     role: 'user',
     suburb: suburb.trim(),
+    joinedCircleIds: [],
     passwordSalt,
     passwordHash,
     createdAt: new Date().toISOString(),
