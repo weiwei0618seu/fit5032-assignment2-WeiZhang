@@ -14,9 +14,10 @@ The current application implements the following Vue 3 assignment requirements a
 - **B.2 – Dynamic data:** sessions, peer circles, users, bookings, and ratings are rendered from Vue state and persisted in Local Storage.
 - **C.1 – Authentication:** registration, login, logout, multiple accounts, and persistent login state.
 - **C.2 – Role-based authentication:** `user` and `admin` roles with protected account and admin routes.
+- **C.3 - Aggregated rating:** authenticated users can submit and update 1-5 ratings for peer circles; averages and rating counts are calculated dynamically.
 - **Supporting flow:** users can create and cancel session bookings, join peer circles, and view their activity in My Account.
 
-Aggregated rating submission (C.3) and the remaining security review (C.4) are planned for later stages. Rating records already exist in the data model, but the rating interface is not yet implemented.
+The remaining security review (C.4) is planned for a later stage.
 
 ## Technology
 
@@ -91,10 +92,10 @@ The Login page also provides buttons that fill these fictional demo credentials.
 | `/about` | Information about young carers | Public |
 | `/support` | Nearby support placeholder | Public |
 | `/sessions` | Browse and book support sessions | Public browsing; user account required to book |
-| `/community` | Browse and join peer circles | Public browsing; user account required to join |
+| `/community` | Browse, join, and rate peer circles | Public browsing; authenticated accounts can rate; user role required to join |
 | `/register` | Create an account | Guests only |
 | `/login` | Log in | Guests only |
-| `/account` | Profile, My Bookings, and joined circles | Authenticated users |
+| `/account` | Profile, My Bookings, joined circles, and submitted ratings | Authenticated users |
 | `/admin` | Charity staff dashboard | Admin only |
 | `/forbidden` | Access denied response | Public response page |
 
@@ -121,7 +122,7 @@ carebloom:auth:v1
 
 The storage service automatically initialises default data, recovers from invalid stored data, and migrates compatible v1/v2 data into v3.
 
-## Booking and peer-circle checks
+## Booking, peer-circle, and rating checks
 
 Data-store actions enforce the following rules:
 
@@ -131,6 +132,12 @@ Data-store actions enforce the following rules:
 - Full sessions and circles reject new activity.
 - Users can cancel only bookings belonging to their own account.
 - Cancelled sessions can be booked again if capacity remains.
+- Visitors can view rating summaries, but only authenticated accounts can submit ratings.
+- Ratings must be whole numbers from 1 to 5.
+- A rating is uniquely identified by `userId + targetType + targetId`.
+- Submitting another score for the same target updates the existing rating instead of creating a duplicate.
+- Average scores and rating counts are derived from the current rating records.
+- A peer circle with no ratings displays an explicit empty state.
 
 Suggested manual test:
 
@@ -141,6 +148,10 @@ Suggested manual test:
 5. Open My Account to view both records.
 6. Cancel the booking and confirm it disappears from active My Bookings.
 7. Refresh the browser and confirm the remaining activity persists.
+8. While logged in, rate a peer circle that displays `No ratings yet`.
+9. Change the score and confirm the rating count stays the same while the average changes.
+10. Open My Account and confirm the latest score appears under Ratings shared.
+11. Log out and confirm rating summaries remain visible but the page asks the visitor to log in before rating.
 
 ## Project structure
 

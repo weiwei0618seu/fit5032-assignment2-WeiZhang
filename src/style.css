@@ -147,6 +147,17 @@ p {
   transform: translateY(0);
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -902,6 +913,126 @@ p {
   background: #fff0ec;
 }
 
+.rating-panel {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--colour-border);
+  background: var(--colour-cream);
+}
+
+.rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rating-symbol {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #8a4336;
+  background: var(--colour-coral-100);
+  font-size: 1.1rem;
+}
+
+.rating-summary strong,
+.rating-summary div > span {
+  display: block;
+}
+
+.rating-summary strong {
+  color: var(--colour-forest-950);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+}
+
+.rating-summary div > span {
+  color: var(--colour-muted);
+  font-size: 0.75rem;
+}
+
+.rating-empty strong {
+  font-size: 0.9rem;
+}
+
+.user-rating {
+  display: flex;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(220, 231, 225, 0.9);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.user-rating-label {
+  color: var(--colour-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.user-rating-label strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--colour-forest-950);
+}
+
+.rating-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.rating-buttons button {
+  min-width: 2.3rem;
+  min-height: 2.15rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--colour-sage-200);
+  border-radius: 999px;
+  color: var(--colour-forest-800);
+  background: var(--colour-white);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rating-buttons button span {
+  margin-left: 0.1rem;
+  color: #a64c3d;
+}
+
+.rating-buttons button:hover,
+.rating-buttons button.is-selected {
+  border-color: var(--colour-coral-500);
+  color: var(--colour-white);
+  background: var(--colour-coral-500);
+}
+
+.rating-buttons button.is-selected span {
+  color: var(--colour-white);
+}
+
+.rating-login-link {
+  display: inline-block;
+  margin-top: 0.9rem;
+}
+
+.rating-feedback {
+  margin: 0.8rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.rating-feedback.is-success {
+  color: var(--colour-forest-800);
+}
+
+.rating-feedback.is-error {
+  color: #8f3426;
+}
+
 .empty-state {
   padding: 3rem;
   border: 1px dashed var(--colour-sage-200);
@@ -1503,6 +1634,28 @@ p {
   font-size: 0.88rem;
 }
 
+.ratings-management-card {
+  grid-column: 1 / -1;
+}
+
+.ratings-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 2rem;
+}
+
+.account-rating-score {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  color: #7c3c30;
+  background: var(--colour-coral-100);
+  align-items: center;
+  gap: 0.2rem;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+}
+
 .admin-section {
   padding-block: clamp(4rem, 8vw, 7rem);
   background:
@@ -2036,6 +2189,14 @@ p {
     grid-template-columns: 1fr;
   }
 
+  .ratings-management-card {
+    grid-column: auto;
+  }
+
+  .ratings-list {
+    grid-template-columns: 1fr;
+  }
+
   .pathway-grid {
     grid-template-columns: 1fr;
   }
@@ -2108,6 +2269,11 @@ p {
 
   .card-link {
     margin-top: 0.25rem;
+  }
+
+  .user-rating {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .form-card {

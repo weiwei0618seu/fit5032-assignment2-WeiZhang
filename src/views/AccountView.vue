@@ -58,11 +58,22 @@ const joinedCircles = computed(() => {
 const bookingCount = computed(() => myBookings.value.length)
 const circleCount = computed(() => joinedCircles.value.length)
 
-const ratingCount = computed(() =>
+const myRatings = computed(() =>
   currentUser.value
-    ? dataState.ratings.filter((rating) => rating.userId === currentUser.value.id).length
-    : 0,
+    ? dataState.ratings
+        .filter(
+          (rating) =>
+            rating.userId === currentUser.value.id && rating.targetType === 'peerCircle',
+        )
+        .map((rating) => ({
+          ...rating,
+          circle: dataState.peerCircles.find((circle) => circle.id === rating.targetId),
+        }))
+        .filter((rating) => rating.circle)
+    : [],
 )
+
+const ratingCount = computed(() => myRatings.value.length)
 
 const roleLabel = computed(() =>
   currentUser.value?.role === 'admin' ? 'Charity staff / admin' : 'Young carer',
@@ -213,6 +224,35 @@ const handleCancellation = (bookingId) => {
           <div v-else class="management-empty">
             <p>You have not joined a peer support circle yet.</p>
             <RouterLink class="card-link" to="/community">Explore peer circles &rarr;</RouterLink>
+          </div>
+        </section>
+
+        <section class="management-card ratings-management-card" aria-labelledby="my-ratings-heading">
+          <div class="management-heading">
+            <div>
+              <p class="eyebrow">My feedback</p>
+              <h2 id="my-ratings-heading">Ratings shared</h2>
+            </div>
+            <span>{{ myRatings.length }}</span>
+          </div>
+
+          <div v-if="myRatings.length" class="management-list ratings-list">
+            <article v-for="rating in myRatings" :key="rating.id" class="management-item">
+              <div>
+                <span class="management-kicker">Peer circle rating</span>
+                <h3>{{ rating.circle.name }}</h3>
+                <p>You can update this rating at any time from Peer Community.</p>
+              </div>
+              <strong class="account-rating-score">
+                {{ rating.score }}<span aria-hidden="true">&#9733;</span>
+                <span class="visually-hidden"> out of 5</span>
+              </strong>
+            </article>
+          </div>
+
+          <div v-else class="management-empty">
+            <p>You have not rated a peer support circle yet.</p>
+            <RouterLink class="card-link" to="/community">Rate a peer circle &rarr;</RouterLink>
           </div>
         </section>
       </div>

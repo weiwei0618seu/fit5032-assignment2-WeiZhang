@@ -1,6 +1,7 @@
 import { computed, reactive, readonly, watch } from 'vue'
 import { collectionKeys } from '../data/defaultData.js'
 import {
+  readAuthSession,
   readCareBloomData,
   resetCareBloomData,
   writeCareBloomData,
@@ -166,6 +167,94 @@ export const joinPeerCircle = (userId, circleId) => {
   circle.memberCount += 1
   persistSnapshot()
   return { ok: true, message: 'You have joined this peer circle.' }
+}
+
+const ratingTargetExists = (targetType, targetId) => {
+  if (targetType === 'peerCircle') {
+    return state.peerCircles.some((circle) => circle.id === targetId)
+  }
+
+  if (targetType === 'supportSession') {
+    return state.supportSessions.some((session) => session.id === targetId)
+  }
+
+  return false
+}
+
+export const getUserRating = (userId, targetType, targetId) =>
+  state.ratings.find(
+    (rating) =>
+      rating.userId === userId &&
+      rating.targetType === targetType &&
+      rating.targetId === targetId,
+  )?.score ?? null
+
+export const getRatingSummary = (targetType, targetId) => {
+  const targetRatings = state.ratings.filter(
+    (rating) =>
+      rating.targetType === targetType &&
+      rating.targetId === targetId &&
+      Number.isInteger(rating.score) &&
+      rating.score >= 1 &&
+      rating.score <= 5,
+  )
+
+  if (targetRatings.length === 0) {
+    return { average: null, count: 0 }
+  }
+
+  const total = targetRatings.reduce((sum, rating) => sum + rating.score, 0)
+  return {
+    average: total / targetRatings.length,
+    count: targetRatings.length,
+  }
+}
+
+export const submitRating = (userId, targetType, targetId, score) => {
+  const activeSession = readAuthSession()
+  const userExists = state.users.some((user) => user.id === userId)
+
+  if (!userExists || activeSession?.userId !== userId) {
+    return { ok: false, message: 'Log in before submitting a rating.' }
+  }
+
+  if (!ratingTargetExists(targetType, targetId)) {
+    return { ok: false, message: 'The item you are rating is no longer available.' }
+  }
+
+  if (!Number.isInteger(score) || score < 1 || score > 5) {
+    return { ok: false, message: 'Choose a whole-number rating from 1 to 5.' }
+  }
+
+  const existingRating = state.ratings.find(
+    (rating) =>
+      rating.userId === userId &&
+      rating.targetType === targetType &&
+      rating.targetId === targetId,
+  )
+
+  const now = new Date().toISOString()
+
+  if (existingRating) {
+    existingRating.score = score
+    existingRating.updatedAt = now
+    persistSnapshot()
+    return { ok: true, created: false, rating: existingRating, message: 'Your rating was updated.' }
+  }
+
+  const rating = {
+    id: `rating-${globalThis.crypto.randomUUID()}`,
+    userId,
+    targetType,
+    targetId,
+    score,
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  state.ratings.push(rating)
+  persistSnapshot()
+  return { ok: true, created: true, rating, message: 'Thank you for sharing your rating.' }
 }
 
 const collectionCounts = computed(() =>

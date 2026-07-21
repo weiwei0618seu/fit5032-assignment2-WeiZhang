@@ -1,12 +1,20 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { joinPeerCircle, useCareBloomData } from '../stores/careBloomStore'
+import {
+  getRatingSummary,
+  getUserRating,
+  joinPeerCircle,
+  submitRating,
+  useCareBloomData,
+} from '../stores/careBloomStore'
 import { useAuth } from '../stores/authStore'
 
 const { state } = useCareBloomData()
 const { currentUser, isAuthenticated } = useAuth()
 const selectedFormat = ref('All')
 const joinFeedback = reactive({})
+const ratingFeedback = reactive({})
+const ratingValues = [1, 2, 3, 4, 5]
 
 const dateFormatter = new Intl.DateTimeFormat('en-AU', {
   weekday: 'short',
@@ -41,6 +49,21 @@ const handleJoin = (circle) => {
     message: result.message,
   }
 }
+
+const ratingSummary = (circleId) => getRatingSummary('peerCircle', circleId)
+
+const currentRating = (circleId) =>
+  currentUser.value ? getUserRating(currentUser.value.id, 'peerCircle', circleId) : null
+
+const formatAverage = (average) => average.toFixed(1)
+
+const handleRating = (circle, score) => {
+  const result = submitRating(currentUser.value.id, 'peerCircle', circle.id, score)
+  ratingFeedback[circle.id] = {
+    type: result.ok ? 'success' : 'error',
+    message: result.message,
+  }
+}
 </script>
 
 <template>
@@ -52,7 +75,7 @@ const handleJoin = (circle) => {
       </div>
       <p class="page-lead">
         Browse fictional peer circles designed to feel respectful, guided, and low-pressure.
-        Young carer accounts can join an available circle and see it in My Account.
+        Join an available circle, see community ratings, and share a 1–5 rating after logging in.
       </p>
     </div>
   </section>
@@ -111,6 +134,60 @@ const handleJoin = (circle) => {
             <ul class="tag-list" :aria-label="`Topics for ${circle.name}`">
               <li v-for="topic in circle.topics" :key="topic">{{ topic }}</li>
             </ul>
+          </div>
+
+          <div class="rating-panel">
+            <div class="rating-summary" :aria-label="`Aggregated rating for ${circle.name}`">
+              <span class="rating-symbol" aria-hidden="true">&#9733;</span>
+              <div v-if="ratingSummary(circle.id).count > 0">
+                <strong>{{ formatAverage(ratingSummary(circle.id).average) }} / 5</strong>
+                <span>
+                  {{ ratingSummary(circle.id).count }}
+                  {{ ratingSummary(circle.id).count === 1 ? 'rating' : 'ratings' }}
+                </span>
+              </div>
+              <div v-else class="rating-empty">
+                <strong>No ratings yet</strong>
+                <span>Be the first to share a rating.</span>
+              </div>
+            </div>
+
+            <div v-if="isAuthenticated" class="user-rating">
+              <span class="user-rating-label">
+                Your rating
+                <strong v-if="currentRating(circle.id)">{{ currentRating(circle.id) }} / 5</strong>
+              </span>
+              <div class="rating-buttons" :aria-label="`Rate ${circle.name}`" role="group">
+                <button
+                  v-for="score in ratingValues"
+                  :key="score"
+                  type="button"
+                  :class="{ 'is-selected': currentRating(circle.id) === score }"
+                  :aria-pressed="currentRating(circle.id) === score"
+                  :aria-label="`${score} out of 5 for ${circle.name}`"
+                  @click="handleRating(circle, score)"
+                >
+                  {{ score }}<span aria-hidden="true">&#9733;</span>
+                </button>
+              </div>
+            </div>
+
+            <RouterLink
+              v-else
+              class="card-link rating-login-link"
+              :to="{ name: 'login', query: { redirect: '/community' } }"
+            >
+              Log in to rate this circle &rarr;
+            </RouterLink>
+
+            <p
+              v-if="ratingFeedback[circle.id]"
+              class="rating-feedback"
+              :class="`is-${ratingFeedback[circle.id].type}`"
+              role="status"
+            >
+              {{ ratingFeedback[circle.id].message }}
+            </p>
           </div>
 
           <div class="card-footer">
