@@ -73,6 +73,13 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEscape))
 
         <div class="nav-actions">
           <template v-if="isAuthenticated">
+            <RouterLink
+              v-if="currentUser.role === 'admin'"
+              class="text-link admin-nav-link"
+              to="/admin"
+            >
+              Dashboard
+            </RouterLink>
             <RouterLink class="text-link account-link" to="/account">
               {{ currentUser.displayName }}
             </RouterLink>

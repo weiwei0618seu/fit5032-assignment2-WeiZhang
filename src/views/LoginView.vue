@@ -1,10 +1,12 @@
 <script setup>
 import { nextTick, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../stores/authStore'
 import { validateLogin } from '../utils/validation.js'
+import { getSafeRedirectTarget } from '../router/routePolicy.js'
 
 const router = useRouter()
+const route = useRoute()
 const { currentUser, isAuthenticated, login } = useAuth()
 
 const form = reactive({ email: '', password: '' })
@@ -54,7 +56,7 @@ const handleSubmit = async () => {
       return
     }
 
-    await router.push('/account')
+    await router.push(getSafeRedirectTarget(route.query.redirect))
   } catch {
     authError.value = 'CareBloom could not log you in. Please try again.'
   } finally {

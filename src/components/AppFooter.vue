@@ -1,3 +1,9 @@
+<script setup>
+import { useAuth } from '../stores/authStore'
+
+const { currentUser, isAuthenticated } = useAuth()
+</script>
+
 <template>
   <footer class="site-footer">
     <div class="container footer-grid">
@@ -24,10 +30,16 @@
       <div>
         <h2 class="footer-heading">Account</h2>
         <ul class="footer-links">
-          <li><RouterLink to="/login">Log in</RouterLink></li>
-          <li><RouterLink to="/register">Create account</RouterLink></li>
-          <li><RouterLink to="/account">My account</RouterLink></li>
-          <li><RouterLink to="/admin">Staff dashboard</RouterLink></li>
+          <template v-if="isAuthenticated">
+            <li><RouterLink to="/account">My account</RouterLink></li>
+            <li v-if="currentUser.role === 'admin'">
+              <RouterLink to="/admin">Staff dashboard</RouterLink>
+            </li>
+          </template>
+          <template v-else>
+            <li><RouterLink to="/login">Log in</RouterLink></li>
+            <li><RouterLink to="/register">Create account</RouterLink></li>
+          </template>
         </ul>
       </div>
     </div>

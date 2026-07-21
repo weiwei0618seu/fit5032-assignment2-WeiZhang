@@ -7,6 +7,10 @@ import CommunityView from '../views/CommunityView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import LoginView from '../views/LoginView.vue'
 import AccountView from '../views/AccountView.vue'
+import AdminDashboardView from '../views/AdminDashboardView.vue'
+import AccessDeniedView from '../views/AccessDeniedView.vue'
+import { useAuth } from '../stores/authStore'
+import { resolveRouteAccess } from './routePolicy.js'
 
 const routes = [
   {
@@ -57,32 +61,31 @@ const routes = [
     path: '/register',
     name: 'register',
     component: RegisterView,
-    meta: { title: 'Register' },
+    meta: { title: 'Register', guestOnly: true },
   },
   {
     path: '/login',
     name: 'login',
     component: LoginView,
-    meta: { title: 'Log in' },
+    meta: { title: 'Log in', guestOnly: true },
   },
   {
     path: '/account',
     name: 'account',
     component: AccountView,
-    meta: { title: 'My account', futureAuth: true },
+    meta: { title: 'My account', requiresAuth: true },
   },
   {
     path: '/admin',
     name: 'admin',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'Charity staff',
-      title: 'CareBloom administration dashboard.',
-      description:
-        'Authorised charity staff will use this area to review users, bookings, activities, and rating summaries.',
-      stage: 'This route will be protected by both authentication and the admin role.',
-    },
-    meta: { title: 'Admin dashboard', futureRole: 'admin' },
+    component: AdminDashboardView,
+    meta: { title: 'Admin dashboard', requiresAuth: true, roles: ['admin'] },
+  },
+  {
+    path: '/forbidden',
+    name: 'forbidden',
+    component: AccessDeniedView,
+    meta: { title: 'Access denied' },
   },
   {
     path: '/:pathMatch(.*)*',
@@ -96,6 +99,15 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
   scrollBehavior: () => ({ top: 0 }),
+})
+
+router.beforeEach((to) => {
+  const { currentUser, isAuthenticated } = useAuth()
+
+  return resolveRouteAccess(to, {
+    isAuthenticated: isAuthenticated.value,
+    currentUser: currentUser.value,
+  })
 })
 
 router.afterEach((to) => {
