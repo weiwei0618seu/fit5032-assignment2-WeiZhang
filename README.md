@@ -16,6 +16,7 @@ The current application implements the following Vue 3 assignment requirements a
 - **C.2 – Role-based authentication:** `user` and `admin` roles with protected account and admin routes.
 - **C.3 - Aggregated rating:** authenticated users can submit and update 1-5 ratings for peer circles; averages and rating counts are calculated dynamically.
 - **Supporting flow:** users can create and cancel session bookings, join peer circles, and view their activity in My Account.
+- **Admin Dashboard:** charity staff can review user role distribution, booking records, peer-circle participation, and aggregated rating data.
 
 The remaining security review (C.4) is planned for a later stage.
 
@@ -96,7 +97,7 @@ The Login page also provides buttons that fill these fictional demo credentials.
 | `/register` | Create an account | Guests only |
 | `/login` | Log in | Guests only |
 | `/account` | Profile, My Bookings, joined circles, and submitted ratings | Authenticated users |
-| `/admin` | Charity staff dashboard | Admin only |
+| `/admin` | Read-only users, bookings, circle participation, and ratings dashboard | Admin only |
 | `/forbidden` | Access denied response | Public response page |
 
 Access to `/account` and `/admin` is enforced by a global Vue Router guard. Navigation visibility is an additional interface measure and is not used as the access-control mechanism.
@@ -152,6 +153,23 @@ Suggested manual test:
 9. Change the score and confirm the rating count stays the same while the average changes.
 10. Open My Account and confirm the latest score appears under Ratings shared.
 11. Log out and confirm rating summaries remain visible but the page asks the visitor to log in before rating.
+
+## Admin dashboard
+
+The stage 7 dashboard is intentionally read-only. It derives all values from the same Vue state and Local Storage data used by the public and account pages, including:
+
+- registered user totals and `user` / `admin` role distribution;
+- confirmed and cancelled booking records joined with fictional user and session data;
+- peer-circle membership totals, capacity, remaining places, and registered account members;
+- average rating, rating count, number of rated circles, and per-circle empty rating states.
+
+Suggested access-control and dashboard test:
+
+1. While logged out, enter `/admin`; the router should redirect to Login with `/admin` retained as the safe destination.
+2. Log in with the Mia young carer account and enter `/admin`; the router should redirect to Access Denied.
+3. Log in with the Priya charity staff account; Admin Dashboard should be available from the navigation.
+4. Compare the dashboard totals and records with Sessions, Peer Community, and the fictional default data.
+5. Resize the dashboard at desktop, tablet, and mobile widths and confirm every record remains readable without page-level horizontal scrolling.
 
 ## Project structure
 
