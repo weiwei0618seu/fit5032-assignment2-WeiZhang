@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import PlaceholderView from '../views/PlaceholderView.vue'
+import AboutView from '../views/AboutView.vue'
+import SupportView from '../views/SupportView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import SessionsView from '../views/SessionsView.vue'
 import CommunityView from '../views/CommunityView.vue'
@@ -22,27 +23,13 @@ const routes = [
   {
     path: '/about',
     name: 'about',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'About young carers',
-      title: 'Caring for someone should not mean caring alone.',
-      description:
-        'This page will explain who young carers are, the pressures they may experience, and the kind of wellbeing support CareBloom provides.',
-      stage: 'Content and resources will be added in the dynamic data stage.',
-    },
+    component: AboutView,
     meta: { title: 'About young carers' },
   },
   {
     path: '/support',
     name: 'support',
-    component: PlaceholderView,
-    props: {
-      eyebrow: 'Find nearby support',
-      title: 'Discover welcoming support close to you.',
-      description:
-        'Browse fictional wellbeing services, charity locations, and peer support circles by area and support type.',
-      stage: 'Search, filters, and dynamic service cards will be added in a later stage.',
-    },
+    component: SupportView,
     meta: { title: 'Find nearby support' },
   },
   {

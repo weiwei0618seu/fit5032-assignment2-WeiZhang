@@ -17,6 +17,7 @@ The current application implements the following Vue 3 assignment requirements a
 - **C.3 - Aggregated rating:** authenticated users can submit and update 1-5 ratings for peer circles; averages and rating counts are calculated dynamically.
 - **C.4 - Basic security:** layered form validation, escaped Vue output, validated Local Storage data, protected routes, operation ownership checks, and fictional test data only.
 - **Supporting flow:** users can create and cancel session bookings, join peer circles, and view their activity in My Account.
+- **Support discovery:** visitors can search and filter six fictional local, hybrid, and online services, then review location, travel, and accessibility details.
 - **Admin Dashboard:** charity staff can review user role distribution, booking records, peer-circle participation, and aggregated rating data.
 
 The core A2 Category A, B, and C requirements are now represented in the prototype.
@@ -91,8 +92,8 @@ The Login page also provides buttons that fill these fictional demo credentials.
 | Route | Purpose | Access |
 | --- | --- | --- |
 | `/` | Home | Public |
-| `/about` | Information about young carers | Public |
-| `/support` | Nearby support placeholder | Public |
+| `/about` | Young carer experiences, wellbeing pressures, and support pathways | Public |
+| `/support` | Searchable and filterable fictional support directory | Public |
 | `/sessions` | Browse and book support sessions | Public browsing; user account required to book |
 | `/community` | Browse, join, and rate peer circles | Public browsing; authenticated accounts can rate; user role required to join |
 | `/register` | Create an account | Guests only |
@@ -155,6 +156,13 @@ Suggested manual test:
 10. Open My Account and confirm the latest score appears under Ratings shared.
 11. Log out and confirm rating summaries remain visible but the page asks the visitor to log in before rating.
 
+Suggested support-directory test:
+
+1. Open Find support and search for `study`; confirm only matching services remain.
+2. Combine suburb, support type, and format filters and confirm the result count updates.
+3. Choose a combination with no matches and confirm the empty state appears.
+4. Clear the filters, expand a service's location details, and review its fictional travel and accessibility information.
+
 ## Admin dashboard
 
 The stage 7 dashboard is intentionally read-only. It derives all values from the same Vue state and Local Storage data used by the public and account pages, including:
@@ -198,7 +206,7 @@ Suggested security regression test:
 ```text
 src/
   components/     Shared header and footer
-  data/           Fictional default data
+  data/           Fictional application and support-directory data
   router/         Routes and role-based access policy
   services/       Storage and authentication utilities
   stores/         Reactive application and authentication state
