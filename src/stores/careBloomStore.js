@@ -68,6 +68,8 @@ export const restoreDefaultData = () => {
 }
 
 export const addUser = (user) => {
+  if (!user || user.role !== 'user') return false
+
   const duplicateUser = state.users.some(
     (existingUser) =>
       existingUser.id === user.id || existingUser.email.toLowerCase() === user.email.toLowerCase(),
@@ -80,7 +82,13 @@ export const addUser = (user) => {
   return true
 }
 
+const hasActiveSessionFor = (userId) => readAuthSession()?.userId === userId
+
 export const createBooking = (userId, sessionId) => {
+  if (!hasActiveSessionFor(userId)) {
+    return { ok: false, message: 'Log in before booking a support session.' }
+  }
+
   const user = state.users.find((candidate) => candidate.id === userId)
   const session = state.supportSessions.find((candidate) => candidate.id === sessionId)
 
@@ -125,6 +133,10 @@ export const createBooking = (userId, sessionId) => {
 }
 
 export const cancelBooking = (userId, bookingId) => {
+  if (!hasActiveSessionFor(userId)) {
+    return { ok: false, message: 'Log in before changing a booking.' }
+  }
+
   const booking = state.bookings.find((candidate) => candidate.id === bookingId)
 
   if (!booking || booking.userId !== userId) {
@@ -142,6 +154,10 @@ export const cancelBooking = (userId, bookingId) => {
 }
 
 export const joinPeerCircle = (userId, circleId) => {
+  if (!hasActiveSessionFor(userId)) {
+    return { ok: false, message: 'Log in before joining a peer circle.' }
+  }
+
   const user = state.users.find((candidate) => candidate.id === userId)
   const circle = state.peerCircles.find((candidate) => candidate.id === circleId)
 
@@ -211,10 +227,9 @@ export const getRatingSummary = (targetType, targetId) => {
 }
 
 export const submitRating = (userId, targetType, targetId, score) => {
-  const activeSession = readAuthSession()
   const userExists = state.users.some((user) => user.id === userId)
 
-  if (!userExists || activeSession?.userId !== userId) {
+  if (!userExists || !hasActiveSessionFor(userId)) {
     return { ok: false, message: 'Log in before submitting a rating.' }
   }
 

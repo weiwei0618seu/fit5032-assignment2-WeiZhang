@@ -12,6 +12,7 @@ import {
   readAuthSession,
   writeAuthSession,
 } from '../services/storageService.js'
+import { validateLogin, validateRegistration } from '../utils/validation.js'
 
 const { state: dataState } = useCareBloomData()
 
@@ -54,7 +55,19 @@ export const initialiseAuth = () => {
   state.isReady = true
 }
 
-export const register = async ({ displayName, email, suburb, password }) => {
+export const register = async (values) => {
+  const validationErrors = validateRegistration(values)
+  const firstInvalidField = Object.keys(validationErrors)[0]
+
+  if (firstInvalidField) {
+    return {
+      ok: false,
+      field: firstInvalidField,
+      message: validationErrors[firstInvalidField],
+    }
+  }
+
+  const { displayName, email, suburb, password } = values
   const normalisedEmail = normaliseEmail(email)
   const emailExists = dataState.users.some(
     (user) => normaliseEmail(user.email) === normalisedEmail,
@@ -86,7 +99,19 @@ export const register = async ({ displayName, email, suburb, password }) => {
   return { ok: true, user: currentUser.value }
 }
 
-export const login = async ({ email, password }) => {
+export const login = async (values) => {
+  const validationErrors = validateLogin(values)
+  const firstInvalidField = Object.keys(validationErrors)[0]
+
+  if (firstInvalidField) {
+    return {
+      ok: false,
+      field: firstInvalidField,
+      message: validationErrors[firstInvalidField],
+    }
+  }
+
+  const { email, password } = values
   const normalisedEmail = normaliseEmail(email)
   const user = dataState.users.find(
     (candidate) => normaliseEmail(candidate.email) === normalisedEmail,

@@ -110,6 +110,8 @@ const handleSubmit = async () => {
               name="displayName"
               type="text"
               autocomplete="name"
+              required
+              minlength="2"
               maxlength="50"
               :aria-invalid="Boolean(errors.displayName)"
               :aria-describedby="errors.displayName ? 'register-name-error' : undefined"
@@ -130,6 +132,7 @@ const handleSubmit = async () => {
               type="email"
               inputmode="email"
               autocomplete="email"
+              required
               maxlength="100"
               :aria-invalid="Boolean(errors.email)"
               :aria-describedby="errors.email ? 'register-email-error' : undefined"
@@ -168,6 +171,8 @@ const handleSubmit = async () => {
               name="password"
               :type="showPasswords ? 'text' : 'password'"
               autocomplete="new-password"
+              required
+              minlength="8"
               maxlength="64"
               :aria-invalid="Boolean(errors.password)"
               :aria-describedby="errors.password ? 'register-password-error' : 'password-hint'"
@@ -188,6 +193,8 @@ const handleSubmit = async () => {
               name="confirmPassword"
               :type="showPasswords ? 'text' : 'password'"
               autocomplete="new-password"
+              required
+              minlength="8"
               maxlength="64"
               :aria-invalid="Boolean(errors.confirmPassword)"
               :aria-describedby="errors.confirmPassword ? 'register-confirm-error' : undefined"

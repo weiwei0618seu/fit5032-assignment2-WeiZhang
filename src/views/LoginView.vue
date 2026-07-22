@@ -52,7 +52,13 @@ const handleSubmit = async () => {
   try {
     const result = await login(form)
     if (!result.ok) {
-      authError.value = result.message
+      if (result.field) {
+        errors[result.field] = result.message
+        await nextTick()
+        document.querySelector(`[name="${result.field}"]`)?.focus()
+      } else {
+        authError.value = result.message
+      }
       return
     }
 
@@ -114,6 +120,7 @@ const handleSubmit = async () => {
                 type="email"
                 inputmode="email"
                 autocomplete="email"
+                required
                 maxlength="100"
                 :aria-invalid="Boolean(errors.email)"
                 :aria-describedby="errors.email ? 'login-email-error' : undefined"
@@ -133,6 +140,7 @@ const handleSubmit = async () => {
                 name="password"
                 :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
+                required
                 maxlength="64"
                 :aria-invalid="Boolean(errors.password)"
                 :aria-describedby="errors.password ? 'login-password-error' : undefined"

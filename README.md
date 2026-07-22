@@ -15,10 +15,11 @@ The current application implements the following Vue 3 assignment requirements a
 - **C.1 – Authentication:** registration, login, logout, multiple accounts, and persistent login state.
 - **C.2 – Role-based authentication:** `user` and `admin` roles with protected account and admin routes.
 - **C.3 - Aggregated rating:** authenticated users can submit and update 1-5 ratings for peer circles; averages and rating counts are calculated dynamically.
+- **C.4 - Basic security:** layered form validation, escaped Vue output, validated Local Storage data, protected routes, operation ownership checks, and fictional test data only.
 - **Supporting flow:** users can create and cancel session bookings, join peer circles, and view their activity in My Account.
 - **Admin Dashboard:** charity staff can review user role distribution, booking records, peer-circle participation, and aggregated rating data.
 
-The remaining security review (C.4) is planned for a later stage.
+The core A2 Category A, B, and C requirements are now represented in the prototype.
 
 ## Technology
 
@@ -171,6 +172,27 @@ Suggested access-control and dashboard test:
 4. Compare the dashboard totals and records with Sessions, Peer Community, and the fictional default data.
 5. Resize the dashboard at desktop, tablet, and mobile widths and confirm every record remains readable without page-level horizontal scrolling.
 
+## Security and test-data controls
+
+The stage 8 security review confirms the following controls:
+
+- User-controlled content is rendered with Vue text interpolation. The project does not use `v-html`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `eval`, or the `Function` constructor.
+- Registration and login enforce required values and length limits in both the form controls and JavaScript business actions. Names and suburbs also use character allowlists; email, password, confirmation, and role values have dedicated validation rules.
+- Local Storage payloads are treated as untrusted input. Collections, record fields, lengths, allowed enum values, IDs, relationships, duplicate records, rating ranges, and timestamps are validated before data is accepted or saved.
+- A stored normal user cannot be promoted by changing their `role` to `admin`. Admin identity and password digest fields must match the fictional trusted account included with the prototype; public registration and the runtime user action can create only the `user` role.
+- `/account` and `/admin` are protected by the global Vue Router guard. Navigation visibility is not the access-control mechanism.
+- Booking, cancellation, peer-circle joining, and rating actions require the submitted user ID to match the active session. Booking cancellation also checks that the booking belongs to that user, and rating updates use the active user's own unique rating key.
+- All people, organisations, bookings, ratings, email addresses, and passwords are fictional course data. No real API key, access token, private key, personal record, or production credential is stored in the repository.
+
+Suggested security regression test:
+
+1. Enter an over-length email or password in Login and confirm the form reports the limit before authentication runs.
+2. Enter HTML-like text such as `<img>` as a registration name and confirm it is rejected as an invalid value.
+3. Attempt `/admin` while logged out and while logged in as Mia; confirm the router redirects to Login and Access Denied respectively.
+4. Change Mia's stored role to `admin`, refresh, and confirm the invalid Local Storage dataset is rejected and restored to safe defaults.
+5. Confirm one user cannot cancel another user's booking or update another user's rating.
+6. Search `src/` for `v-html` and `innerHTML`; neither should be present.
+
 ## Project structure
 
 ```text
@@ -186,6 +208,6 @@ src/
 
 ## Security limitations
 
-This is a client-side course prototype. Passwords are stored as salted one-way digests rather than plain text, user input is rendered with Vue text interpolation, and protected routes check authentication and role state. However, Local Storage and client-side roles can be modified by a browser user and are not production-grade security boundaries.
+This is a client-side course prototype. Passwords are stored as salted one-way digests rather than plain text, but all browser-delivered code and storage remain visible to the person using that browser. Validation and role checks reduce accidental corruption and demonstrate the required access rules; they cannot turn Local Storage into a production-grade trust boundary.
 
-A later version can replace the local authentication and data layer with Firebase Authentication, Firestore security rules, and server-side authorisation.
+A production version must replace local authentication and data persistence with Firebase Authentication or another server-backed identity provider, server-side session verification, database security rules, and server-side authorisation for every protected write.
